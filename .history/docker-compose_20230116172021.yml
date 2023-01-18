@@ -1,0 +1,71 @@
+version: '3'
+
+services:
+
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: 
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: admin333
+      MYSQL_PASSWORD: admin333
+    volumes:
+      - ./dbdata:/var/lib/mysql
+      - dbdata:/var/lib/mysql
+    command: '--default-authentication-plugin=mysql_native_password'
+    networks:
+      - wpv2-network
+
+  phpmyadmin:
+    image: phpmyadmin
+    restart: always
+    ports:
+      - 333:80
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    depends_on:
+      - db
+    networks:
+      - wpv2-network
+
+  wordpress:
+    depends_on:
+      - db
+    image: wordpress:6.1.1-fpm-alpine
+    restart: always
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_USER: admin333
+      WORDPRESS_DB_PASSWORD: admin333
+      WORDPRESS_DB_NAME: doc_wp_v2
+    volumes:
+      - wordpress:/var/www/html
+      - ./wordpress/themes/docker-test-theme:/var/www/html/wp-content/themes/docker-test-theme
+      - ./wordpress/plugins/docker-test-plugin:/var/www/html/wp-content/plugins/docker-test-plugin
+    networks:
+      - wpv2-network
+
+  webserver:
+    depends_on:
+      - wordpress
+    image: nginx:1.15.12-alpine
+    restart: always
+    ports:
+      - 3333:80
+    volumes:
+      - wordpress:/var/www/html
+      - ./nginx-conf:/etc/nginx/conf.d
+      - ./wordpress/themes/docker-test-theme:/var/www/html/wp-content/themes/docker-test-theme
+      - ./wordpress/plugins/docker-test-plugin:/var/www/html/wp-content/plugins/docker-test-plugin
+    networks:
+      - wpv2-network
+
+
+volumes:
+  wordpress:
+  dbdata:
+
+networks:
+  wpv2-network:
+    driver: bridge

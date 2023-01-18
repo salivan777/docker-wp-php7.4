@@ -1,0 +1,4 @@
+Сборка 
+- WP 6.1.1-fpm-alpine
+- MySQL 8.0
+- PMA 
